@@ -1,9 +1,9 @@
 package br.com.bb.cerberus.model;
 
 public class Movie {
-    private String rank,votes,year,runtimeMin,metascore;
-    private String title,genre,description,director,actors;
-    private String rating,revenueMillions;
+    private String rank, votes, year, runtimeMin, metascore;
+    private String title, genre, description, director, actors;
+    private String rating, revenueMillions;
 
     public String getRank() {
         return rank;
@@ -54,17 +54,17 @@ public class Movie {
     }
 
     public Movie(String rank,
-                 String title,
-                 String genre,
-                 String description,
-                 String director,
-                 String actors,
-                 String year,
-                 String runtimeMin,
-                 String metascore,
-                 String rating,
-                 String votes,
-                 String revenueMillions) {
+            String title,
+            String genre,
+            String description,
+            String director,
+            String actors,
+            String year,
+            String runtime,
+            String rating,
+            String votes,
+            String revenue,
+            String metascore) {
         this.rank = rank;
         this.title = title;
         this.genre = genre;
@@ -72,16 +72,16 @@ public class Movie {
         this.director = director;
         this.actors = actors;
         this.year = year;
-        this.runtimeMin = runtimeMin;
+        this.runtimeMin = runtime;
         this.metascore = metascore;
         this.rating = rating;
         this.votes = votes;
-        this.revenueMillions = revenueMillions;
+        this.revenueMillions = revenue;
     }
 
     @Override
     public String toString() {
-        return String.format("%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n",
+        return String.format("%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
                 rank,
                 title,
                 genre,
@@ -93,8 +93,15 @@ public class Movie {
                 metascore,
                 rating,
                 votes,
-                revenueMillions
-                );
+                revenueMillions);
+    }
+
+    public void printMovie() {
+        System.out.println(this.toString());
+    }
+
+    public boolean isOfGenre(String genre) {
+        return this.genre.contains(genre);
     }
 
     public boolean isHorrorMovie() {
