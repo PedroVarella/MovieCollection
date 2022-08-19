@@ -14,12 +14,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
-//faz a busca na lista por ano e grava o arquivo em threads separadas
-public class Aplicacao {
+//Gera o mapa de filmes em memória na thread main e grava cada arquivo em uma thread separada
+public class Aplicacao2 {
 
 	private static final String CAMINHO_ABSOLUTO = System.getProperty("user.dir") + "/src/main/java/";
 	private static final Charset UTF8 = Charset.forName("UTF-8");
@@ -33,17 +35,14 @@ public class Aplicacao {
 		final CountDownLatch latch = new CountDownLatch(3);
 
 		Thread t1 = new Thread(() -> {
-			// System.out.println(Instant.now().toString() + "-> lendo arquivo 1");
 			fileToList("movies1.csv", 1, movies);
 			latch.countDown();
 		});
 		Thread t2 = new Thread(() -> {
-			// System.out.println(Instant.now().toString() + "-> lendo arquivo 2");
 			fileToList("movies2.csv", 0, movies);
 			latch.countDown();
 		});
 		Thread t3 = new Thread(() -> {
-			// System.out.println(Instant.now().toString() + "-> lendo arquivo 3");
 			fileToList("movies3.csv", 0, movies);
 			latch.countDown();
 		});
@@ -58,39 +57,39 @@ public class Aplicacao {
 			e.printStackTrace();
 		}
 
-		List<String> anos = movies.stream().map(m -> m.getYear()).distinct().collect(Collectors.toList());
+		Map<String, List<Movie>> mapAnoFilme = new HashMap<>();
+		movies.stream().map(m -> m.getYear()).distinct()
+				.forEach(a -> mapAnoFilme.put(a,
+						movies.stream().filter(m -> m.getYear().equals(a))
+								.sorted(Comparator.comparing(Movie::getRating).reversed()).limit(50)
+								.collect(Collectors.toList())));
+		int qtThreads = mapAnoFilme.size();
 
-		final CountDownLatch latch2 = new CountDownLatch(anos.size() + 1);
+		final CountDownLatch latch2 = new CountDownLatch(qtThreads + 1);
 
 		List<Thread> arrThread = new ArrayList<Thread>();
 
-		anos.forEach(a -> {
+		for (Map.Entry<String, List<Movie>> entry : mapAnoFilme.entrySet()) {
 			arrThread.add(new Thread(() -> {
 				try {
-					// System.out.println(Instant.now().toString() + "-> gerando arquivo do ano " +
-					// a);
-					gerarArquivo(a,
-							movies.stream().filter(m -> m.getYear().equals(a))
-									.sorted(Comparator.comparing(Movie::getRating).reversed()).limit(50)
-									.collect(Collectors.toList()));
-					latch2.countDown();
+					gerarArquivo(entry.getKey(), entry.getValue());
 				} catch (RuntimeException | IOException e) {
 					e.printStackTrace();
 				}
+				latch2.countDown();
 			}));
-		});
+		}
 
 		arrThread.forEach(Thread::start);
 
 		Thread t4 = new Thread(() -> {
 			try {
-				// System.out.println(Instant.now().toString() + "-> gerando arquivo de
-				// terror");
 				gerarArquivo("Filmes de Terror",
 						movies.stream().filter(m -> m.isOfGenre("Horror"))
 								.sorted(Comparator.comparing(Movie::getRating).reversed()).limit(20)
 								.collect(Collectors.toList()));
 			} catch (RuntimeException | IOException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			latch2.countDown();
